@@ -5,44 +5,55 @@ import java.util.*;
 
 public class Company implements Investor, Observer {
     Random rng = new Random();
-    int stockAmount = 1000;
-    BigDecimal stockPrice = BigDecimal.valueOf(30);
     String name;
     StockExchange stockExchange; //to be set in Dependency Injection
+    ArrayList<Stock> stocks;
+    List<Bid> bids;
+
 
     public Company(String name) {
         this.name = name;
+        this.stocks = new ArrayList<>(10);
+        Collections.addAll(stocks, new Stock(this), new Stock(this), new Stock(this), new Stock(this), new Stock(this), new Stock(this), new Stock(this), new Stock(this), new Stock(this), new Stock(this));
     }
 
-    public void adjustingStockPrice() {
-        stockPrice = BigDecimal.valueOf(stockAmount * 0.03);
+    public ArrayList<Stock> getStock() {
+        return stocks;
     }
 
-    public int getStockAmount() {
-        return stockAmount;
-    }
-
-    public BigDecimal getStockPrice() {
-        return stockPrice;
-    }
-
-
-    @Override
-    public void makeBid(Company party, int stocksToBuy, BigDecimal bid) {
-        stockExchange.listBid(party, stocksToBuy, bid);
+    public void buyBackStock() {
+        //TODO: buy back own stock. Don't care about other companies stock.
     }
 
     @Override
-    public boolean evaluateBid(BigDecimal bid, int stocksTheyWant) {
-        if (rng.nextInt(2) < 1) { //decide on coin flip. 0 or 1;
-            return false;
+    public void makeBid(Bid bid) {
+        stockExchange.listBid(this, bid);
+    }
+
+    @Override
+    public Bid acceptBid(List<Bid> bids) {
+        //TODO: Make it so if a bid is accepted. It is removed from Exchange and the stock is transfered.
+        bids = new ArrayList<>(stockExchange.getCompanyBids().values());
+        if (bids == null) return null;
+        Bid bestBid;
+        try {
+            bestBid = bids.get(0);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
         }
-        return true;
+
+        for (int i = 0; i < bids.size(); i++) {
+            if (bids.get(i).getStock().getCompany() != this) continue;
+            if (bids.get(i).calculatePricePerStock().compareTo(bestBid.calculatePricePerStock()) > 0) bestBid = bids.get(i);
+        }
+        if (rng.nextInt(2) < 1) { //decide on coin flip. 0 or 1;
+            return null;
+        }
+
+        if (bestBid.getStock().getCompany() != this) return null;
+        return bestBid;
     }
 
-    public void stockSold() {
-        stockAmount -= 1;
-    }
 
     public void setName(String name) {
         this.name = name;
@@ -51,9 +62,21 @@ public class Company implements Investor, Observer {
     @Override
     public String toString() {
         return "Company{" +
-                "stockAmount=" + stockAmount +
+                "stockAmount=" + getStock().size() +
                 ", name='" + name + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean withdrawStock(Stock stock) {
+        try {
+            stocks.remove(stock);
+            return true;
+        } catch (Exception e) {
+            System.out.println("couldnt withdraw stock");
+            return false;
+        }
+
     }
 
     @Override
@@ -62,8 +85,13 @@ public class Company implements Investor, Observer {
     }
 
     @Override
+    public void transferStock(Stock stock) {
+
+    }
+
+    @Override
     public void update(Observable o, Object arg) {
-        System.out.println(((HashMap<Company, Integer>) arg).toString());
+        System.out.println(((HashMap<Company, Integer>) arg).keySet());
     }
 
 

@@ -7,6 +7,7 @@ public class Player implements Investor, Observer {
     private BigDecimal funds;
     private UUID id;
     private String name;
+    private ArrayList<Stock> ownedStock;
     Random rng = new Random();
     private StockExchange stockExchange; //to be set in Dependency Injection
 
@@ -14,6 +15,16 @@ public class Player implements Investor, Observer {
         this.funds = funds;
         this.id = id;
         this.name = name;
+        this.ownedStock = new ArrayList<>();
+    }
+
+    public void transferStock(Stock stock) {
+        ownedStock.add(stock);
+    }
+
+    @Override
+    public boolean withdrawStock(Stock stock) {
+        return false;
     }
 
     public void addInterest(double percent) {
@@ -36,15 +47,18 @@ public class Player implements Investor, Observer {
                 '}';
     }
 
-
-    @Override
-    public void makeBid(Company party, int stocksToBuy, BigDecimal bid) {
-        stockExchange.listBid(party, stocksToBuy, bid);
+    public void sellStock() {
+        //TODO: list a selling offer on the stock exchange. The offer being a specific stock for a certain price.
     }
 
     @Override
-    public boolean evaluateBid(BigDecimal bid, int stocksTheyWant) {
-        return false;
+    public void makeBid(Bid bid) {
+        stockExchange.listBid(this, bid);
+    }
+
+    @Override
+    public Bid acceptBid(List<Bid> bids) {
+        return null;
     }
 
     public void setName(String name) {
@@ -59,9 +73,16 @@ public class Player implements Investor, Observer {
     @Override
     public void update(Observable o, Object arg) {
         if (o instanceof StockExchange) {
-            HashMap<Company, Integer> example = (HashMap<Company, Integer>) arg;
-            makeBid(((Company) example.keySet().toArray()[rng.nextInt(2)]), rng.nextInt(3), BigDecimal.valueOf(rng.nextInt(3)));
-            System.out.println(this.toString());
+            HashMap<Company, ArrayList<Stock>> mapCompanyStocks = (HashMap<Company, ArrayList<Stock>>) arg;
+            List<ArrayList<Stock>> listOfLists = new ArrayList<>(mapCompanyStocks.values());
+            ArrayList<Stock> stocks = listOfLists.get(rng.nextInt(listOfLists.size()));
+
+            if(stocks.size() != 0){
+                makeBid(new Bid(this,
+                        stocks.get(rng.nextInt(stocks.size())), 1, BigDecimal.valueOf(1+rng.nextInt(30))));
+                System.out.println(this.toString()+this.ownedStock);
+            }
+
         }
     }
 }

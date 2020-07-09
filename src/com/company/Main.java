@@ -9,10 +9,10 @@ public class Main {
 //https://1000projects.org/final-year-distributed-system-project-idea-on-stock-market-simulation-game.html
     public static void main(String[] args) {
         Bank bank = new Bank();
+
         Player p = new Player(BigDecimal.valueOf(100), UUID.randomUUID(), "Sadik");
         Player p2 = new Player(BigDecimal.valueOf(100), UUID.randomUUID(), "Robot");
         Company company = new Company("Sadikman Sachs");
-
         Company heey = new Company("Stock Company");
         Company heey2 = new Company("Coke Company");
         Company heey3 = new Company("Potato Farm");
@@ -39,7 +39,7 @@ public class Main {
             investor.setStockExchange(sE);
             sE.addObserver(observer);
         }
-        sE.setObservers();
+        sE.addCompaniesStock();
 
         long start = System.nanoTime();
         while (true) {
